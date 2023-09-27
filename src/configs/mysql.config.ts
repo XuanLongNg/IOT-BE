@@ -1,14 +1,14 @@
 import dotenv from "dotenv";
 import mysql, { Pool } from "mysql2";
+import { getEnv } from "../utils/getEnv";
 dotenv.config();
 
 const config = {
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE,
+  host: getEnv("DB_HOST"),
+  user: getEnv("DB_USER"),
+  password: getEnv("DB_PASSWORD"),
+  database: getEnv("DB_DATABASE"),
 };
-
 class MySQLConfig {
   public connection: Pool;
   public constructor() {
