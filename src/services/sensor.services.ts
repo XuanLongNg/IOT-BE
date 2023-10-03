@@ -56,7 +56,6 @@ class SensorServices {
   public async getHumidityByMonth({ time }: { time: string }) {
     try {
       const timeFormat = Format_YYYY_MM_DD(time);
-      console.log(timeFormat.time, timeFormat.days);
 
       const query = `SELECT id, id_sensor, humidity, time FROM HistorySensor WHERE humidity IS NOT null and DATE_FORMAT(time, '%Y-%c') = '${
         timeFormat.years + "-" + timeFormat.months

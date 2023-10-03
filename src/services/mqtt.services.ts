@@ -50,7 +50,7 @@ class MQTTService {
         luminance: topic === "luminance" ? message.toString() : undefined,
         time: time.time,
       };
-      // console.log(data);
+      console.log(data);
 
       SensorServices.updateDataSensor(data);
       io.emit("announce", data);
