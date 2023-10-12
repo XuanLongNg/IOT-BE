@@ -81,6 +81,19 @@ class SensorController {
       return res.status(404).send({ error: error });
     }
   }
+  public async getDustByMonth(req: Request, res: Response) {
+    try {
+      const data = {
+        ...req.query,
+        time: req.query.time as string,
+      };
+      const response = await SensorServices.getDustByMonth(data);
+      return res.status(200).send(response);
+    } catch (error) {
+      console.log(error);
+      return res.status(404).send({ error: error });
+    }
+  }
   // public async updateSensorData(req: Request, res: Response) {
   //   try {
   //     MqttService.onMessage();

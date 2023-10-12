@@ -7,11 +7,15 @@ import { Server, Socket } from "socket.io";
 import { DefaultEventsMap } from "socket.io/dist/typed-events";
 dotenv.config();
 class MQTTService {
+  private dataTopic: string = "esp32/dht";
   private temperatureTopic: string = "esp32/dht/temperature";
   private humidityTopic: string = "esp32/dht/humidity";
-  private luminanceTopic: string = "esp32/led/luminance";
-  private lightControlTopic: string = "esp32/led/control/1";
-  private fanControlTopic: string = "esp32/led/control/2";
+  private luminanceTopic: string = "esp32/bh1750/luminance";
+  private lightControlTopic1: string = "esp32/led/control/1/1";
+  private lightControlTopic2: string = "esp32/led/control/1/2";
+  private fanControlTopic1: string = "esp32/led/control/2/1";
+  private fanControlTopic2: string = "esp32/led/control/1/2";
+  private warning: string = "esp32/led/warning";
 
   private client: mqtt.MqttClient;
   constructor() {
@@ -20,9 +24,9 @@ class MQTTService {
       this.client.subscribe(this.temperatureTopic);
       this.client.subscribe(this.humidityTopic);
       this.client.subscribe(this.luminanceTopic);
-      this.client.subscribe(this.lightControlTopic);
-      this.client.subscribe(this.fanControlTopic);
-
+      this.client.subscribe(this.lightControlTopic2);
+      this.client.subscribe(this.fanControlTopic2);
+      this.client.subscribe(this.dataTopic);
       console.log("Connected MQTT");
     });
     // console.log("Connected MQTT");
@@ -36,35 +40,65 @@ class MQTTService {
     this.client.on("message", (topic, message) => {
       // console.log(topic, message.toString());
       if (
-        topic !== "esp32/dht/temperature" &&
-        topic !== "esp32/dht/humidity" &&
-        topic !== "luminance"
+        topic == "esp32/led/control/1/2" ||
+        topic == "esp32/led/control/2/2"
+      ) {
+        if (topic == "esp32/led/control/1/2")
+          io.emit("led1", message.toString());
+        else io.emit("led2", message.toString());
+        return;
+      } else if (
+        topic == this.humidityTopic ||
+        topic == this.temperatureTopic ||
+        topic == this.luminanceTopic
       )
         return;
+      console.log(topic);
+
       const time = Format_YYYY_MM_DD_HH_mm_ss(new Date().toString());
       const data = {
-        temperature:
-          topic === "esp32/dht/temperature" ? message.toString() : undefined,
-        humidity:
-          topic === "esp32/dht/humidity" ? message.toString() : undefined,
-        luminance: topic === "luminance" ? message.toString() : undefined,
+        id_sensor: "dht11",
+        temperature: "0",
+        humidity: "0",
+        luminance: "0",
+        dust: Math.round(Math.random() * 101).toString(),
         time: time.time,
       };
-      console.log(data);
+      let tmp = "";
+      let index = 0;
+      for (let i of message.toString()) {
+        if (i == " ") {
+          if (index == 0) {
+            data.temperature = tmp;
+          } else if (index == 1) {
+            data.luminance = tmp;
+          } else {
+            data.humidity = tmp;
+          }
+          tmp = "";
+          index++;
+          continue;
+        }
+        tmp += i;
+      }
+      data.humidity = tmp;
+
+      // console.log(data);
 
       SensorServices.updateDataSensor(data);
       io.emit("announce", data);
     });
   }
-  public async publishMessage(message: string, topic: 1 | 2 | 3 | 4 | 5) {
+  public async publishMessage(message: string, topic: 1 | 2 | 3 | 4 | 5 | 6) {
     const topic_list = [
       this.temperatureTopic,
       this.humidityTopic,
       this.luminanceTopic,
-      this.lightControlTopic,
-      this.fanControlTopic,
+      this.lightControlTopic1,
+      this.fanControlTopic1,
+      this.warning,
     ];
-    console.log("Find ", topic_list[topic - 1], message);
+    // console.log("Find ", topic_list[topic - 1], message);
     this.client.publish(topic_list[topic - 1], message);
   }
 }

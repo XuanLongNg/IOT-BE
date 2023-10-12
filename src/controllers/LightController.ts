@@ -31,6 +31,17 @@ class LightController {
       return res.status(404).send({ error: error });
     }
   }
+  public async warningLed(req: Request, res: Response) {
+    try {
+      console.log(req.body.message);
+
+      const response = await MqttService.publishMessage(req.body.message, 6);
+      return res.status(200).send(response);
+    } catch (error) {
+      console.log(error);
+      return res.status(404).send({ error: error });
+    }
+  }
 }
 
 const lightController = new LightController();

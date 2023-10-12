@@ -60,7 +60,7 @@ class SensorServices {
       const query = `SELECT id, id_sensor, humidity, time FROM HistorySensor WHERE humidity IS NOT null and DATE_FORMAT(time, '%Y-%c') = '${
         timeFormat.years + "-" + timeFormat.months
       }';`;
-      console.log(query);
+      // console.log(query);
 
       const [data] = await connection.promise().query(query);
       let rowDataPacketArray = data as RowDataPacket[];
@@ -125,26 +125,48 @@ class SensorServices {
     }
   }
   public async updateDataSensor({
+    id_sensor,
     temperature,
     humidity,
     luminance,
     time,
+    dust,
   }: {
+    id_sensor: string;
     temperature?: string;
     humidity?: string;
     luminance?: string;
     time: string;
+    dust?: string;
   }) {
     try {
-      const query = `insert into HistorySensor(id_sensor, temperature, humidity, luminance, time)
+      const query = `insert into HistorySensor(id_sensor, temperature, humidity, luminance, dust, time)
       values("dht11", ${temperature ? '"' + temperature + '"' : null}, ${
         humidity ? '"' + humidity + '"' : null
-      }, ${luminance ? '"' + luminance + '"' : null}, "${
-        Format_YYYY_MM_DD_HH_mm_ss(time).time
-      }")`;
+      }, ${luminance ? '"' + luminance + '"' : null}, ${
+        dust ? '"' + dust + '"' : null
+      }, "${Format_YYYY_MM_DD_HH_mm_ss(time).time}")`;
       // console.log(query);
 
       await connection.promise().query(query);
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
+  public async getDustByMonth({ time }: { time: string }) {
+    try {
+      const timeFormat = Format_YYYY_MM_DD(time);
+
+      const query = `SELECT id, id_sensor, dust, time FROM HistorySensor WHERE dust IS NOT null and DATE_FORMAT(time, '%Y-%c') = '${
+        timeFormat.years + "-" + timeFormat.months
+      }';`;
+      const [data] = await connection.promise().query(query);
+      let rowDataPacketArray = data as RowDataPacket[];
+      return rowDataPacketArray.map((data: any) => {
+        data = { ...data, time: Format_YYYY_MM_DD_HH_mm_ss(data.time).time };
+        return data;
+      });
     } catch (error) {
       console.log(error);
       throw error;
